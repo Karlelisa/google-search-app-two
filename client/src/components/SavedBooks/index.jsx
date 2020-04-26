@@ -1,9 +1,14 @@
 import React, { Component } from "react";
 import API from "../../utils/API";
+import "./style.css";
+
+//// This SavedBooks componment is used on the Saved.js page (Your Learning Materials) ////
 
 class Results extends Component {
   state = {
     savedBooks: [],
+    searchedBooks: [],
+    searched: false
   };
 
   // When the component mounts, load all saved books
@@ -14,55 +19,39 @@ class Results extends Component {
   // Loads all saved books and sets them to this.state.savedBooks
   loadSavedBooks = () => {
     API.savedBooks()
-      .then((savedBooks) => this.setState({ savedBooks: savedBooks }))
-      .catch((err) => console.error(err));
+      .then(savedBooks => this.setState({ savedBooks: savedBooks }))
+      .catch(err => console.error(err));
   };
 
-  handleSave = (book) => {
-    if (this.state.savedBooks.map((book) => book._id).includes(book._id)) {
-      API.deleteBook(book._id)
-        .then((deletedBook) =>
-          this.setState({
-            savedBooks: this.state.savedBooks.filter(
-              (book) => book._id !== deletedBook._id
-            ),
-          })
-        )
-        .catch((err) => console.error(err));
-    } else {
-      console.log("book", book);
-      API.saveBook(book)
-        .then((savedBook) =>
-          this.setState({
-            savedBooks: this.state.savedBooks.concat([savedBook]),
-          })
-        )
-        .catch((err) => console.error(err));
-    }
+  // Deletes a saved book from the database with a given id, then reloads saved books from the db
+  handleDelete = id => {
+    API.deleteBook(id)
+      .then(res => this.loadSavedBooks())
+      .catch(err => console.log(err));
   };
-  //show results
+
   render() {
     return (
       <div>
         {/* {!this.props.books.length ? (
-          <h1 className="text-center">No Results to Display</h1>
-        ) : ( */}
+                    <h2 className="text-center">No Results to Display</h2>
+                ) : ( */}
         <div>
-          {this.props.books.map((result) => (
+          {this.state.savedBooks.map(result => (
             <div className="card mb-3 border" key={result._id}>
               <div className="row">
                 <div className="col-md-2">
                   <img
                     alt={result.title}
-                    className="iimg-fluid align-self-center mr-3"
+                    className="img-fluid align-self-center mr-3"
                     src={result.image}
                   />
                 </div>
                 <div className="col-md-10">
                   <div className="card-body">
-                    <h5 className="card-title">
+                    <h4 className="card-title text-info">
                       {result.title} by {result.authors}
-                    </h5>
+                    </h4>
                     <p className="card-text">{result.description}</p>
                     <div>
                       <a
@@ -74,15 +63,10 @@ class Results extends Component {
                         View
                       </a>
                       <button
-                        onClick={() => this.handleSave(result)}
+                        onClick={() => this.handleDelete(result._id)}
                         className="btn badge-pill btn-outline-info mt-3 ml-3"
                       >
-                        {/* When the user clicks on the save button, the name of the button changes to Saved! to inform the user their selection was saved */}
-                        {this.state.savedBooks
-                          .map((book) => book._id)
-                          .includes(result._id)
-                          ? "Saved!"
-                          : "Save"}
+                        Delete
                       </button>
                     </div>
                   </div>
